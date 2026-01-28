@@ -6,3 +6,4 @@
 /geom/*.shx filter=lfs diff=lfs merge=lfs -text
 /geom/*.shp filter=lfs diff=lfs merge=lfs -text
 /geom/*.dbf filter=lfs diff=lfs merge=lfs -text
+/geom/*.prj filter=lfs diff=lfs merge=lfs -text
