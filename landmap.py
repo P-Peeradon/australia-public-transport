@@ -51,9 +51,9 @@ bne_council = gpd.sjoin(gdf3, bne_boundary, predicate='within').loc[:, ['LGA_COD
 adl_council = gpd.sjoin(gdf3, adl_boundary, predicate='within').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']]
 
 print(syd_suburb)
-print(syd_suburb)
-print(syd_suburb)
-print(syd_suburb)
+print(mel_suburb)
+print(bne_suburb)
+print(adl_suburb)
 
 ##########################################
 
