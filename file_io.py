@@ -2,6 +2,7 @@ import geopandas as gpd
 import pandas as pd
 import os
 from shapely import wkt
+from shapely.validation import make_valid
 
 class TextFileIO:
     def __init__(self):
@@ -91,6 +92,40 @@ class GeoFileIO:
             '.gpkg': 'GPKG'
         }
         return mapping.get(extension)
+    
+    def fix_invalid_geometries(self, gdf):
+        """
+        Fixes 'Self-Intersection' errors common in complex river boundaries like Brisbane.
+        """
+        if not isinstance(gdf, gpd.GeoDataFrame):
+            raise TypeError("Expected a GeoDataFrame.")
+        
+        # apply make_valid to fix topological errors without losing data
+        gdf['geometry'] = gdf['geometry'].apply(lambda x: make_valid(x) if not x.is_valid else x)
+        return gdf
+    
+    def add_centroids(self, gdf):
+        """
+        Calculates the center point of each suburb for map markers or station linking.
+        """
+        # We use a representative_point() because it's guaranteed to be inside the polygon
+        # whereas a mathematical centroid might fall outside for 'C' shaped suburbs.
+        if not isinstance(gdf, gpd.GeoDataFrame):
+            raise TypeError("Expected a GeoDataFrame.")
+        
+        gdf['centroid'] = gdf.geometry.representative_point()
+        return gdf
+    
+    def calculate_area_km2(self, gdf):
+        """Calculates the area in square kilometers."""
+        # Geometry must be projected to a metric system (like GDA2020) to calculate area accurately
+        # Then we convert from m2 to km2
+        if not isinstance(gdf, gpd.GeoDataFrame):
+            raise TypeError("Expected a GeoDataFrame.")
+        
+        temp_gdf = gdf.to_crs(epsg=7855) # GDA2020 / MGA zone 55 (approx for SE Australia)
+        gdf['area_km2'] = temp_gdf.area / 10**6
+        return gdf
     
     def read_geometry(self, file_path):
         """
