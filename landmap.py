@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
+import re
 
 base_dir = os.getcwd()
 
@@ -29,13 +30,15 @@ adl_boundary = gdf[gdf['GCC_CODE21'] == '4GADE']
 path_to_sal = os.path.join(base_dir, 'geom', 'SAL_2021_AUST_GDA2020.shp')
 gdf2 = gpd.read_file(path_to_sal)
 #print(gdf2)
+gdf2['centroid'] = gdf2.geometry.representative_point()
+gdf2_centroid = gdf2.set_geometry('centroid')
 
 #print(gdf2.columns)
-#print(gdf2.loc[:, ['SAL_CODE21', 'SAL_NAME21', 'geometry']])
-syd_suburb = gpd.sjoin(gdf2, syd_boundary, predicate='within').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'geometry']]
-mel_suburb = gpd.sjoin(gdf2, mel_boundary, predicate='within').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'geometry']]
-bne_suburb = gpd.sjoin(gdf2, bne_boundary, predicate='within').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'geometry']]
-adl_suburb = gpd.sjoin(gdf2, adl_boundary, predicate='within').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'geometry']]
+#print(gdf2_centroid.loc[:, ['SAL_CODE21', 'SAL_NAME21', 'STE_NAME21']])
+syd_suburb = gpd.sjoin(gdf2_centroid, syd_boundary, predicate='intersects').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
+mel_suburb = gpd.sjoin(gdf2_centroid, mel_boundary, predicate='intersects').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
+bne_suburb = gpd.sjoin(gdf2_centroid, bne_boundary, predicate='intersects').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
+adl_suburb = gpd.sjoin(gdf2_centroid, adl_boundary, predicate='intersects').loc[:, ['SAL_CODE21', 'SAL_NAME21', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
 
 #########################################
 
@@ -43,20 +46,15 @@ adl_suburb = gpd.sjoin(gdf2, adl_boundary, predicate='within').loc[:, ['SAL_CODE
 path_to_lga = os.path.join(base_dir, 'geom', 'LGA_2025_AUST_GDA2020.shp')
 gdf3 = gpd.read_file(path_to_lga)
 #print(gdf3)
+gdf3['centroid'] = gdf3.geometry.representative_point()
+gdf3_centroid = gdf3.set_geometry('centroid')
 
 #print(gdf3.columns)
-#print(gdf3.loc[:, ['SAL_CODE21', 'SAL_NAME21', 'geometry']])
-syd_council = gpd.sjoin(gdf3, syd_boundary, predicate='within').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']]
-mel_council = gpd.sjoin(gdf3, mel_boundary, predicate='within').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']]
-bne_council = gpd.sjoin(gdf3, bne_boundary, predicate='within').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']]
-adl_council = gpd.sjoin(gdf3, adl_boundary, predicate='within').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']]
-
-"""
-print(syd_suburb)
-print(mel_suburb)
-print(bne_suburb)
-print(adl_suburb)
-"""
+#print(gdf3.loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']])
+syd_council = gpd.sjoin(gdf3_centroid, syd_boundary, predicate='intersects').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
+mel_council = gpd.sjoin(gdf3_centroid, mel_boundary, predicate='intersects').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
+bne_council = gpd.sjoin(gdf3_centroid, bne_boundary, predicate='intersects').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
+adl_council = gpd.sjoin(gdf3_centroid, adl_boundary, predicate='intersects').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'STE_NAME21_left', 'geometry']].set_geometry('geometry')
 
 ##########################################
 
@@ -65,16 +63,35 @@ land_csv_path = os.path.join(base_dir, 'area-destination')
 #write suburb data into .csv files
 syd_suburb['wkt_geom'] = syd_suburb.geometry.apply(lambda x: x.wkt)
 syd_suburb['centroid'] = syd_suburb.geometry.representative_point()
-pd.DataFrame(syd_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'syd_suburb.csv'), index=False)
+pd.DataFrame(syd_suburb.drop(columns='geometry')).rename({'SAL_CODE21': 'SAL_CODE', 'SAL_NAME21': 'SAL_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'syd_suburb.csv'), index=False)
 
 mel_suburb['wkt_geom'] = mel_suburb.geometry.apply(lambda x: x.wkt)
 mel_suburb['centroid'] = mel_suburb.geometry.representative_point()
-pd.DataFrame(mel_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'mel_suburb.csv'), index=False)
+pd.DataFrame(mel_suburb.drop(columns='geometry')).rename({'SAL_CODE21': 'SAL_CODE', 'SAL_NAME21': 'SAL_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'mel_suburb.csv'), index=False)
 
 bne_suburb['wkt_geom'] = bne_suburb.geometry.apply(lambda x: x.wkt)
 bne_suburb['centroid'] = bne_suburb.geometry.representative_point()
-pd.DataFrame(bne_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'bne_suburb.csv'), index=False)
+pd.DataFrame(bne_suburb.drop(columns='geometry')).rename({'SAL_CODE21': 'SAL_CODE', 'SAL_NAME21': 'SAL_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'bne_suburb.csv'), index=False)
 
 adl_suburb['wkt_geom'] = adl_suburb.geometry.apply(lambda x: x.wkt)
 adl_suburb['centroid'] = adl_suburb.geometry.representative_point()
-pd.DataFrame(adl_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'adl_suburb.csv'), index=False)
+pd.DataFrame(adl_suburb.drop(columns='geometry')).rename({'SAL_CODE21': 'SAL_CODE', 'SAL_NAME21': 'SAL_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'adl_suburb.csv'), index=False)
+
+#write lga data into .csv files
+syd_council['wkt_geom'] = syd_council.geometry.apply(lambda x: x.wkt)
+syd_council['centroid'] = syd_council.geometry.representative_point()
+pd.DataFrame(syd_council.drop(columns='geometry')).rename({'LGA_CODE25': 'LGA_CODE', 'LGA_NAME25': 'LGA_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'syd_council.csv'), index=False)
+
+mel_council['wkt_geom'] = mel_council.geometry.apply(lambda x: x.wkt)
+mel_council['centroid'] = mel_council.geometry.representative_point()
+pd.DataFrame(mel_council.drop(columns='geometry')).rename({'LGA_CODE25': 'LGA_CODE', 'LGA_NAME25': 'LGA_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'mel_council.csv'), index=False)
+
+bne_council['wkt_geom'] = bne_council.geometry.apply(lambda x: x.wkt)
+bne_council['centroid'] = bne_council.geometry.representative_point()
+pd.DataFrame(bne_council.drop(columns='geometry')).rename({'LGA_CODE25': 'LGA_CODE', 'LGA_NAME25': 'LGA_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'bne_council.csv'), index=False)
+
+adl_council['wkt_geom'] = adl_council.geometry.apply(lambda x: x.wkt)
+adl_council['centroid'] = adl_council.geometry.representative_point()
+pd.DataFrame(adl_council.drop(columns='geometry')).rename({'LGA_CODE25': 'LGA_CODE', 'LGA_NAME25': 'LGA_NAME', 'STE_NAME21_left': 'STE_NAME'}).to_csv(os.path.join(land_csv_path, 'adl_council.csv'), index=False)
+
+
