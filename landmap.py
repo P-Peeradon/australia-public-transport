@@ -2,6 +2,7 @@
 import os
 import pandas as pd
 import geopandas as gpd
+from shapely import wkt
 
 base_dir = os.getcwd()
 
@@ -50,11 +51,26 @@ mel_council = gpd.sjoin(gdf3, mel_boundary, predicate='within').loc[:, ['LGA_COD
 bne_council = gpd.sjoin(gdf3, bne_boundary, predicate='within').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']]
 adl_council = gpd.sjoin(gdf3, adl_boundary, predicate='within').loc[:, ['LGA_CODE25', 'LGA_NAME25', 'geometry']]
 
+"""
 print(syd_suburb)
 print(mel_suburb)
 print(bne_suburb)
 print(adl_suburb)
+"""
 
 ##########################################
 
+land_csv_path = os.path.join(base_dir, 'area-destination')
+
 #write suburb data into .csv files
+syd_suburb['wkt_geom'] = syd_suburb.geometry.apply(lambda x: x.wkt)
+pd.DataFrame(syd_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'syd_suburb.csv'), index=False)
+
+mel_suburb['wkt_geom'] = mel_suburb.geometry.apply(lambda x: x.wkt)
+pd.DataFrame(mel_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'mel_suburb.csv'), index=False)
+
+bne_suburb['wkt_geom'] = bne_suburb.geometry.apply(lambda x: x.wkt)
+pd.DataFrame(bne_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'bne_suburb.csv'), index=False)
+
+adl_suburb['wkt_geom'] = adl_suburb.geometry.apply(lambda x: x.wkt)
+pd.DataFrame(adl_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'adl_suburb.csv'), index=False)
