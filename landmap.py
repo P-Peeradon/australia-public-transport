@@ -64,13 +64,17 @@ land_csv_path = os.path.join(base_dir, 'area-destination')
 
 #write suburb data into .csv files
 syd_suburb['wkt_geom'] = syd_suburb.geometry.apply(lambda x: x.wkt)
+syd_suburb['centroid'] = syd_suburb.geometry.centroid
 pd.DataFrame(syd_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'syd_suburb.csv'), index=False)
 
 mel_suburb['wkt_geom'] = mel_suburb.geometry.apply(lambda x: x.wkt)
+mel_suburb['centroid'] = mel_suburb.geometry.centroid
 pd.DataFrame(mel_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'mel_suburb.csv'), index=False)
 
 bne_suburb['wkt_geom'] = bne_suburb.geometry.apply(lambda x: x.wkt)
+bne_suburb['centroid'] = bne_suburb.geometry.centroid
 pd.DataFrame(bne_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'bne_suburb.csv'), index=False)
 
 adl_suburb['wkt_geom'] = adl_suburb.geometry.apply(lambda x: x.wkt)
+adl_suburb['centroid'] = adl_suburb.geometry.centroid
 pd.DataFrame(adl_suburb.drop(columns='geometry')).to_csv(os.path.join(land_csv_path, 'adl_suburb.csv'), index=False)
