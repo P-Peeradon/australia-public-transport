@@ -147,3 +147,41 @@ class GeoFileIO:
         
         except Exception as e:
             raise RuntimeError(f"Write Failure: Could not save to '{full_output_path}'. Reason: {e}")
+
+class SpatialInterchange:
+    def __init__(self):
+        pass
+
+    def geo_to_text(self, gdf):
+        """
+        Converts Geometry objects into WKT text strings for CSV storage.
+        """
+        if not isinstance(gdf, gpd.GeoDataFrame):
+            raise TypeError("Input Error: Expected a GeoDataFrame.")
+
+        # Create a copy to avoid modifying the original
+        df_text = pd.DataFrame(gdf.drop(columns='geometry'))
+        
+        # Convert geometry to WKT (Well-Known Text) string
+        # e.g., 'POLYGON ((153.0 -27.4, ...))'
+        df_text['geometry_wkt'] = gdf.geometry.apply(lambda x: x.wkt)
+        
+        return df_text
+
+    def text_to_geo(self, df, wkt_column='geometry_wkt', crs="EPSG:4326"):
+        """Converts a DataFrame with WKT text back into a GeoDataFrame."""
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("Expected a DataFrame.")
+        
+        if wkt_column not in df.columns:
+            raise KeyError(f"Column '{wkt_column}' not found in the text data.")
+
+        try:
+            # Convert the string column back into real geometry objects
+            df['geometry'] = df[wkt_column].apply(wkt.loads)
+            gdf = gpd.GeoDataFrame(df, geometry='geometry', crs=crs)
+            
+            # Remove the string version to keep it clean
+            return gdf.drop(columns=[wkt_column])
+        except Exception as e:
+            raise ValueError(f"Failed to parse WKT strings. Reason: {e}")
