@@ -22,18 +22,19 @@ class OceaniaGovDataCleaner:
         df = df.copy()
         df['city_name'] = self.city_code_to_name[city_code]
         df['state_code'] = self.scope_code[city_code]
-        
-        df['sal_name_clean'] = df['sal_name'].apply(self.sanitize_legal_name)
-        
-        # Regex Capture: [Direction] [Base Name] or [Base Name] [Direction]
 
-        temp_split = df['sal_name_clean'].apply(lambda x: pd.Series(self.split_name(x)))
+        temp_split = df['sal_name'].apply(lambda x: pd.Series(self.split_name(x)))
         df['base_name'], df['direction'] = temp_split[0], temp_split[1]
         df['is_centre'] = (df['direction'] == "Centre").astype(int)
         
         return df
     
-    def sanitize_legal_name(self, text):
+    def sanitize_lga_name(self, text):
+        '''
+        Clean the LGA name by removing prefix or suffix if detected.
+        The name must be preserved by removing terms like City of/Shire/Council
+        '''
+        
         if not isinstance(text, str): return text
         # Removes: "City of", "Shire of", "Council", "LGA", etc.
         patterns = [r'^(The\s+)?(City|Shire|Town|Borough|District Council)\s+of\s+', 
